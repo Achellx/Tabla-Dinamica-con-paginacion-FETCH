@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch</title>
+    <script>
+        function deleteChild() {
+            var e = document.getElementById("table");
+            var child = e.lastElementChild;
+            while (child) {
+                e.removeChild(child);
+                child = e.lastElementChild;
+            }
+        }
+
+        function dataInTable(cliente, page) {
+            let table = document.getElementById("table");
+            deleteChild();
+            let startIndex = (page - 1) * 100;
+            let endIndex = Math.min(startIndex + 100, cliente.length);
+
+            for (let i = startIndex; i < endIndex; i++) {
+                let tr = document.createElement("tr");
+                let values = Object.values(cliente[i]);
+                values.forEach((y) => {
+                    let cell = document.createElement("td");
+                    cell.innerText = y;
+                    tr.appendChild(cell);
+                });
+                table.appendChild(tr);
+            }
+        }
+
+        function limitar() {
+            const limiteInput = document.getElementById("valor").value;
+            const limite = parseInt(limiteInput, 10);
+
+            if (isNaN(limite) || limite <= 0) {
+                console.log("Ingresa un número mayor a 0");
+            } else {
+                fetch("/json/clientes.json") //AQUI SE HACE LA CONEXION
+                    .then(response => response.json())
+                    .then(data => {
+                        let totalPages = Math.ceil(data.length / 100);
+                        let currentPage = 1;
+
+                        dataInTable(data.slice(0, limite), currentPage);
+
+                        let pagination = document.querySelector(".pagination");
+                        pagination.innerHTML = "";
+                        for (let i = 1; i <= totalPages; i++) {
+                            let li = document.createElement("li");
+                            let a = document.createElement("a");
+                            a.href = "#";
+                            a.innerText = i;
+                            a.addEventListener("click", function () {
+                                currentPage = i;
+                                dataInTable(data, currentPage);
+                            });
+                            li.appendChild(a);
+                            pagination.appendChild(li);
+                        }
+                    })
+                    .catch(error => console.error("Error al descargar JSON"));
+            }
+
+        }
+
+        window.addEventListener("load", function () {
+            fetch("/json/clientes.json") //AQUI SE HACE LA CONEXION
+                .then(response => response.json())
+                .then(data => {
+                    let totalPages = Math.ceil(data.length / 100);
+                    let currentPage = 1;
+
+                    dataInTable(data, currentPage);
+
+                    let pagination = document.querySelector(".pagination");
+                    pagination.innerHTML = "";
+                    for (let i = 1; i <= totalPages; i++) {
+                        let li = document.createElement("li");
+                        let a = document.createElement("a");
+                        a.href = "#";
+                        a.innerText = i;
+                        a.addEventListener("click", function () {
+                            currentPage = i;
+                            dataInTable(data, currentPage);
+                        });
+                        li.appendChild(a);
+                        pagination.appendChild(li);
+                    }
+                })
+                .catch(error => console.error("Error al descargar JSON"));
+        })
+
+    </script>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        thead {
+            background-color: #007BFF;
+            color: #fff;
+        }
+
+        th {
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #e0e0e0;
+        }
+
+        .pagination {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .pagination li {
+            margin: 0 5px;
+        }
+
+        .pagination a {
+            text-decoration: none;
+            background-color: #007BFF;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 3px;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+
+        .pagination a:hover {
+            background-color: #0056b3;
+            transform: scale(1.1);
+        }
+
+        .pagination .active a {
+            background-color: #0056b3;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            text-align: center;
+        }
+
+        label {
+            font-size: 18px;
+            margin-right: 10px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            border: 2px solid #007BFF;
+            border-radius: 5px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        @media screen and (max-width: 320px) {
+            h1 {
+                font-size: 16px;
+            }
+
+            label {
+                font-size: 12px;
+            }
+
+            input[type="text"] {
+                font-size: 12px;
+            }
+
+            button {
+                font-size: 12px;
+                padding: 3px 6px;
+            }
+
+            th,
+            td {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Tabla Dinámica con paginacion FETCH</h1>
+    <nav aria-label="pagination">
+        <ul class="pagination">
+        </ul>
+    </nav>
+
+    <label for="valor">Introduce tu valor</label>
+    <input type="text" name="valor" id="valor">
+
+    <button type="submit" onclick="limitar()">Enviar</button><br><br>
+
+    <table>
+        <thead>
+            <tr>
+                <td>cliente_id</td>
+                <td>tienda_id</td>
+                <td>Nombre</td>
+                <td>Apellido</td>
+                <td>email</td>
+                <td>adress_id</td>
+                <td>activo</td>
+            </tr>
+        </thead>
+        <tbody id="table">
+
+        </tbody>
+
+    </table>
+
+</body>
+
+</html>
